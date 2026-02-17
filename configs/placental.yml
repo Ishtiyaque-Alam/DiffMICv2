@@ -4,9 +4,9 @@ data:
     label_min_max: [0.001, 0.999]
     num_classes: 15
     num_workers: 8
-    data_dir: './path/to/your/images/'  # TODO: set path to directory containing the .png chest X-ray images
-    traindata: './sample_labels.csv'  # TODO: replace with your train split CSV
-    testdata: './sample_labels.csv'  # TODO: replace with your test split CSV
+    data_dir: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample/images'  # TODO: set path to directory containing the .png chest X-ray images
+    traindata: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample_labels.csv'  # TODO: replace with your train split CSV
+    testdata: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample_labels.csv'  # TODO: replace with your test split CSV
 
 model:
     type: "simple"
