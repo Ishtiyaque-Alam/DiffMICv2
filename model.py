@@ -222,7 +222,7 @@ class SamEncoder(nn.Module):
         self.g = nn.Conv2d(self.featdim, feature_dim, kernel_size=1, stride=1)
 
     def forward_feature(self, x):
-        feature = self.f.image_encoder(x)
+        feature = self.f.get_image_embeddings(x)
         feature = self.g(feature)
         feature = F.adaptive_avg_pool2d(feature,(1,1))
         return torch.flatten(feature,start_dim=1)
