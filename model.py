@@ -217,7 +217,7 @@ class SamEncoder(nn.Module):
 
         self.f = []
         self.f = build_efficient_sam_vitt()
-        self.featdim = 384
+        self.featdim = 256
         
             
         self.g = nn.Conv2d(self.featdim, feature_dim, kernel_size=1, stride=1)
