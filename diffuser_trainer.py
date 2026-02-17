@@ -58,6 +58,13 @@ class CoolSystem(pl.LightningModule):
         self.aux_model = AuxCls(self.params)
         self.init_weight(ckpt_path='/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth')
         self.aux_model.eval()
+        # Freeze aux_model — no gradients needed
+        for param in self.aux_model.parameters():
+            param.requires_grad = False
+        # Freeze EfficientSAM encoder — it upscales to 1024x1024 internally,
+        # so storing its activation graph would consume ~12GB
+        for param in self.model.encoder_x.parameters():
+            param.requires_grad = False
 
         self.save_hyperparameters()
         
@@ -278,7 +285,9 @@ def main():
         max_epochs=config.training.n_epochs,
         accelerator='gpu',
         devices=1,
-        precision=32,
+        precision='16-mixed',
+        gradient_clip_val=1.0,
+        num_sanity_val_steps=0,
         logger=logger,
         strategy="auto",
         enable_progress_bar=True,
