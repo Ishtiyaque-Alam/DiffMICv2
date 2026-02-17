@@ -112,7 +112,9 @@ class CoolSystem(pl.LightningModule):
 
 
     def guided_prob_map(self, y0_g, y0_l, bz, nc, np):
-    
+        # Cast to float32 to avoid dtype mismatch with mixed precision
+        y0_g = y0_g.float()
+        y0_l = y0_l.float()
         distance_to_diag = torch.tensor([[abs(i-j)  for j in range(np)] for i in range(np)]).to(self.device)
 
         weight_g = 1 - distance_to_diag / (np-1)
