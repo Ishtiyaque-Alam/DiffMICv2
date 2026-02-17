@@ -290,8 +290,8 @@ def main():
     trainer.fit(model,ckpt_path=resume_checkpoint_path)
     
     #validate
-    # val_path=r'DiffMIC/logs/placental/version_4/checkpoints/placental-epoch924-accuracy-0.9350-f1-0.9327.ckpt'
-    # trainer.validate(model,ckpt_path=val_path)
+    val_path=r'/kaggle/working/DiffMICv2/logs/placental/version_0/checkpoints/last.ckpt'
+    trainer.validate(model,ckpt_path=val_path)
     
 if __name__ == '__main__':
 	#your code
