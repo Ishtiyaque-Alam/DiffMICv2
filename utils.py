@@ -149,7 +149,7 @@ def cast_label_to_one_hot_and_prototype(y_labels_batch, config, return_prototype
     """
     y_labels_batch: a vector of length batch_size.
     """
-    y_one_hot_batch = nn.functional.one_hot(y_labels_batch, num_classes=config.data.num_classes).float()
+    y_one_hot_batch = nn.functional.one_hot(y_labels_batch.long(), num_classes=config.data.num_classes).float()
     if return_prototype:
         label_min, label_max = config.data.label_min_max
         y_logits_batch = torch.logit(nn.functional.normalize(
