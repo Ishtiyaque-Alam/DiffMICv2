@@ -1,6 +1,6 @@
 from typing import Optional
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '6'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import numpy as np
 import copy
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, STEP_OUTPUT
@@ -56,7 +56,7 @@ class CoolSystem(pl.LightningModule):
 
         self.model = ConditionalModel(self.params, guidance=self.params.diffusion.include_guidance)
         self.aux_model = AuxCls(self.params)
-        self.init_weight(ckpt_path='/kaggle/working/DiffMICv2/pretraining/ckpt/chest_aux_model.pth')
+        self.init_weight(ckpt_path='/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth')
         self.aux_model.eval()
 
         self.save_hyperparameters()
@@ -241,7 +241,7 @@ class CoolSystem(pl.LightningModule):
 
 def main():
     RESUME = False
-    resume_checkpoint_path = r'/kaggle/working/DiffMICv2/logs/placental/version_0/checkpoints/last.ckpt'
+    resume_checkpoint_path = r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
     if RESUME == False:
         resume_checkpoint_path =None
 
@@ -290,7 +290,7 @@ def main():
     trainer.fit(model,ckpt_path=resume_checkpoint_path)
     
     #validate
-    val_path=r'/kaggle/working/DiffMICv2/logs/placental/version_0/checkpoints/last.ckpt'
+    val_path=r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
     trainer.validate(model,ckpt_path=val_path)
     
 if __name__ == '__main__':
