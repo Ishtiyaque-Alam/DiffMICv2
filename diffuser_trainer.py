@@ -132,9 +132,8 @@ class CoolSystem(pl.LightningModule):
         self.aux_model.eval()
         
         x_batch, y_batch = batch
-        y_batch, _ = cast_label_to_one_hot_and_prototype(y_batch, self.params)
-        y_batch = y_batch.cuda()
-        #bicubic = bicubic.cuda()
+        # Labels are already one-hot from ChestXrayDataSet, no conversion needed
+        y_batch = y_batch.float().cuda()
         x_batch = x_batch.cuda()
         with torch.no_grad():
             y0_aux, y0_aux_global, y0_aux_local, patches, attns, attn_map = self.aux_model(x_batch)
@@ -197,8 +196,8 @@ class CoolSystem(pl.LightningModule):
 
         
         x_batch, y_batch = batch
-        y_batch, _ = cast_label_to_one_hot_and_prototype(y_batch, self.params)
-        y_batch = y_batch.cuda()
+        # Labels are already one-hot from ChestXrayDataSet, no conversion needed
+        y_batch = y_batch.float().cuda()
         x_batch = x_batch.cuda()
         y0_aux, y0_aux_global, y0_aux_local, patches, attns, attn_map = self.aux_model(x_batch)
 
