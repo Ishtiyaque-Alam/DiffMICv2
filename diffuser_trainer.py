@@ -56,7 +56,7 @@ class CoolSystem(pl.LightningModule):
 
         self.model = ConditionalModel(self.params, guidance=self.params.diffusion.include_guidance)
         self.aux_model = AuxCls(self.params)
-        self.init_weight(ckpt_path='pretraining/ckpt/placental_aux_model.pth')
+        self.init_weight(ckpt_path='/kaggle/working/DiffMICv2/pretraining/ckpt/placental_aux_model.pth')
         self.aux_model.eval()
 
         self.save_hyperparameters()
