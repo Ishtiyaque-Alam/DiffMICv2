@@ -241,7 +241,7 @@ class CoolSystem(pl.LightningModule):
 
 def main():
     RESUME = False
-    resume_checkpoint_path = r'logs/placental/version_0/checkpoints/last.ckpt'
+    resume_checkpoint_path = r'/kaggle/working/DiffMICv2/logs/placental/version_0/checkpoints/last.ckpt'
     if RESUME == False:
         resume_checkpoint_path =None
 
@@ -253,7 +253,7 @@ def main():
         torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = True
 
-    config_path = r'configs/placental.yml'
+    config_path = r'/kaggle/working/DiffMICv2/configs/placental.yml'
     with open(config_path, 'r') as f:
         params = yaml.safe_load(f)
     config = EasyDict(params)
