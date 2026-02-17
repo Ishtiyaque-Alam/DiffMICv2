@@ -1,12 +1,12 @@
 data:
-    dataset: "PLACENTAL"
+    dataset: "CHEST"
     seed: 2000
     label_min_max: [0.001, 0.999]
-    num_classes: 4
+    num_classes: 15
     num_workers: 8
-    dataroot: './dataset/'
-    traindata: './dataset/ultrasound_train_list.pkl'
-    testdata: './dataset/ultrasound_test_list.pkl'
+    data_dir: './path/to/your/images/'  # TODO: set path to directory containing the .png chest X-ray images
+    traindata: './sample_labels.csv'  # TODO: replace with your train split CSV
+    testdata: './sample_labels.csv'  # TODO: replace with your test split CSV
 
 model:
     type: "simple"

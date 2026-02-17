@@ -215,7 +215,7 @@ class SamEncoder(nn.Module):
         super(SamEncoder, self).__init__()
 
         self.f = []
-        self.f = build_efficient_sam_vits(image_size=image_size)
+        self.f = build_efficient_sam_vitt()
         self.featdim = 384
         
             

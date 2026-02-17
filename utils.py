@@ -100,23 +100,22 @@ def adjust_learning_rate(optimizer, epoch, config):
 
 def get_dataset(config):
     data_object = None
-    if config.data.dataset == "PLACENTAL":
-        train_dataset = BUDataset(data_list=config.data.traindata, train=True)
-        test_dataset = BUDataset(data_list=config.data.testdata, train=False)
-    elif config.data.dataset == "APTOS":
-        train_dataset = APTOSDataset(data_list=config.data.traindata, train=True)
-        test_dataset = APTOSDataset(data_list=config.data.testdata, train=False)
-    elif config.data.dataset == "ISIC":
-        train_dataset = ISICDataset(data_list=config.data.traindata, train=True)
-        test_dataset = ISICDataset(data_list=config.data.testdata, train=False)
-    elif config.data.dataset == "CHEST":
-
-        train_dataset = ChestXrayDataSet(image_list_file=config.data.traindata, train=True)
-        test_dataset = ChestXrayDataSet(image_list_file=config.data.testdata, train=False)
+    if config.data.dataset == "CHEST":
+        train_dataset = ChestXrayDataSet(
+            csv_file=config.data.traindata,
+            data_dir=config.data.data_dir,
+            train=True
+        )
+        test_dataset = ChestXrayDataSet(
+            csv_file=config.data.testdata,
+            data_dir=config.data.data_dir,
+            train=False
+        )
     else:
         raise NotImplementedError(
-            "Options: toy (classification of two Gaussian), MNIST, FashionMNIST, CIFAR10.")
+            f"Dataset {config.data.dataset} not supported. Use CHEST.")
     return data_object, train_dataset, test_dataset
+
 
 from sklearn.metrics import cohen_kappa_score
 # ------------------------------------------------------------------------------------
