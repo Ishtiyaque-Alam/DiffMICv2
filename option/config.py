@@ -27,7 +27,7 @@ def get_config():
         seed=0,
         dataset=config_dict(
             name='cifar10',
-            path="datasets/",
+            path="/kaggle/working/DiffMICv2/datasets/",
             resolution=32,
             args=config_dict(
                 class_conditional=False,

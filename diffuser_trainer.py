@@ -48,7 +48,7 @@ class CoolSystem(pl.LightningModule):
         self.initlr = self.params.optim.lr
 
         
-        config_path = r'option/diff_DDIM.yaml'
+        config_path = r'/kaggle/working/DiffMICv2/option/diff_DDIM.yaml'
         with open(config_path, 'r') as f:
             params = yaml.safe_load(f)
         config = EasyDict(params)
