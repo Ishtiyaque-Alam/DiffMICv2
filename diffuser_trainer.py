@@ -164,8 +164,13 @@ class CoolSystem(pl.LightningModule):
         noise = noise.view(bz,np*np,-1).permute(0,2,1).reshape(bz,nc,np,np)
         loss = self.diffusion_focal_loss(y0_aux,y_batch,noise_pred,noise)
 
-        self.log("train_loss",loss,prog_bar=True)
+        self.log("train_loss",loss,prog_bar=True,on_step=True,on_epoch=True)
         return {"loss":loss}
+
+    def on_train_epoch_end(self):
+        avg_loss = self.trainer.callback_metrics.get("train_loss_epoch", None)
+        if avg_loss is not None:
+            print(f"\nEpoch {self.current_epoch} | Avg Train Loss: {avg_loss:.6f}")
 
     # def validation_step_end(self,step_output):
     #     model_state_dict = self.model.state_dict()
@@ -275,14 +280,14 @@ def main():
         monitor='f1',
         filename='placental-epoch{epoch:02d}-accuracy-{accuracy:.4f}-f1-{f1:.4f}',
         auto_insert_metric_name=False,   
-        every_n_epochs=1,
+        every_n_epochs=10,
         save_top_k=1,
         mode = "max",
         save_last=True
     )
     lr_monitor_callback = LearningRateMonitor(logging_interval='step')
     trainer = pl.Trainer(
-        check_val_every_n_epoch=5,
+        check_val_every_n_epoch=10,
         max_epochs=config.training.n_epochs,
         accelerator='gpu',
         devices=1,
@@ -292,7 +297,7 @@ def main():
         logger=logger,
         strategy="auto",
         enable_progress_bar=True,
-        log_every_n_steps=5,
+        log_every_n_steps=1,
         callbacks = [checkpoint_callback,lr_monitor_callback]
     ) 
 
