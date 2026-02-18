@@ -1,8 +1,12 @@
 from typing import Optional
 import os
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+import csv
+import json
 import numpy as np
 import copy
+from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
+import seaborn as sns
 from pytorch_lightning.utilities.types import EVAL_DATALOADERS, STEP_OUTPUT
 import torch
 from torch import nn
@@ -28,6 +32,8 @@ import pipeline
 from torchvision.utils import save_image
 from torchvision.models import vgg16
 output_dir = 'logs'
+results_dir = os.path.join(output_dir, 'results')
+os.makedirs(results_dir, exist_ok=True)
 version_name='Baseline'
 logger = TensorBoardLogger(name='placental',save_dir = output_dir )
 import matplotlib.pyplot as plt
@@ -70,6 +76,10 @@ class CoolSystem(pl.LightningModule):
         
         self.gts = []
         self.preds = []
+        
+        # History for saving metrics
+        self.train_loss_history = []
+        self.val_metrics_history = []
 
         self.DiffSampler = pipeline.SR3Sampler(
             model=self.model,
@@ -170,7 +180,15 @@ class CoolSystem(pl.LightningModule):
     def on_train_epoch_end(self):
         avg_loss = self.trainer.callback_metrics.get("train_loss_epoch", None)
         if avg_loss is not None:
-            print(f"\nEpoch {self.current_epoch} | Avg Train Loss: {avg_loss:.6f}")
+            loss_val = avg_loss.item() if torch.is_tensor(avg_loss) else avg_loss
+            self.train_loss_history.append({'epoch': self.current_epoch, 'train_loss': loss_val})
+            print(f"\nEpoch {self.current_epoch} | Avg Train Loss: {loss_val:.6f}")
+            # Save train loss CSV
+            csv_path = os.path.join(results_dir, 'train_loss_history.csv')
+            with open(csv_path, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=['epoch', 'train_loss'])
+                writer.writeheader()
+                writer.writerows(self.train_loss_history)
 
     # def validation_step_end(self,step_output):
     #     model_state_dict = self.model.state_dict()
@@ -192,6 +210,18 @@ class CoolSystem(pl.LightningModule):
         self.log('AUC',AUC_ovo)
         self.log('kappa',kappa)   
         
+        # Save metrics to history
+        metrics_row = {
+            'epoch': self.current_epoch,
+            'accuracy': float(ACC), 'precision': float(Prec),
+            'recall': float(Rec), 'f1': float(F1),
+            'auc': float(AUC_ovo), 'kappa': float(kappa)
+        }
+        self.val_metrics_history.append(metrics_row)
+
+        # Keep last gt/pred for final confusion matrix
+        self.final_gt = gt
+        self.final_pred = pred
         self.gts = []
         self.preds = []
         print("Val: Accuracy {0}, F1 score {1}, Precision {2}, Recall {3}, AUROC {4}, Cohen Kappa {5}".format(ACC,F1,Prec,Rec,AUC_ovo,kappa))
@@ -252,6 +282,96 @@ class CoolSystem(pl.LightningModule):
         return test_loader  
 
 
+def save_plots(model):
+    """Save training loss and validation metric plots."""
+    # --- Training loss curve ---
+    if model.train_loss_history:
+        epochs = [r['epoch'] for r in model.train_loss_history]
+        losses = [r['train_loss'] for r in model.train_loss_history]
+        plt.figure(figsize=(10, 5))
+        plt.plot(epochs, losses, 'b-', linewidth=1.5)
+        plt.xlabel('Epoch')
+        plt.ylabel('Training Loss')
+        plt.title('Training Loss Curve')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(os.path.join(results_dir, 'training_loss.png'), dpi=150)
+        plt.close()
+        print(f"Saved training loss plot to {results_dir}/training_loss.png")
+
+    # --- Validation metrics curves ---
+    if model.val_metrics_history:
+        epochs = [r['epoch'] for r in model.val_metrics_history]
+        metric_names = ['accuracy', 'f1', 'precision', 'recall', 'auc', 'kappa']
+        
+        plt.figure(figsize=(12, 8))
+        for name in metric_names:
+            values = [r[name] for r in model.val_metrics_history]
+            plt.plot(epochs, values, 'o-', linewidth=1.5, markersize=4, label=name.upper())
+        plt.xlabel('Epoch')
+        plt.ylabel('Score')
+        plt.title('Validation Metrics')
+        plt.legend(loc='lower right')
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.savefig(os.path.join(results_dir, 'validation_metrics.png'), dpi=150)
+        plt.close()
+        print(f"Saved validation metrics plot to {results_dir}/validation_metrics.png")
+
+        # Individual metric plots
+        for name in metric_names:
+            values = [r[name] for r in model.val_metrics_history]
+            plt.figure(figsize=(8, 5))
+            plt.plot(epochs, values, 'o-', linewidth=1.5, markersize=4, color='teal')
+            plt.xlabel('Epoch')
+            plt.ylabel(name.upper())
+            plt.title(f'Validation {name.upper()} Over Epochs')
+            plt.grid(True, alpha=0.3)
+            plt.tight_layout()
+            plt.savefig(os.path.join(results_dir, f'val_{name}.png'), dpi=150)
+            plt.close()
+
+        # Save val metrics CSV
+        csv_path = os.path.join(results_dir, 'val_metrics_history.csv')
+        fieldnames = ['epoch', 'accuracy', 'precision', 'recall', 'f1', 'auc', 'kappa']
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(model.val_metrics_history)
+
+        # Save latest metrics as JSON
+        json_path = os.path.join(results_dir, 'final_val_metrics.json')
+        with open(json_path, 'w') as f:
+            json.dump(model.val_metrics_history[-1], f, indent=2)
+        print(f"Saved val metrics to {results_dir}/val_metrics_history.csv")
+
+    # --- Confusion Matrix (final validation only) ---
+    if hasattr(model, 'final_gt') and model.final_gt is not None:
+        gt_np = model.final_gt.cpu().detach().numpy()
+        pred_np = model.final_pred.cpu().detach().numpy()
+        gt_class = np.argmax(gt_np, axis=1)
+        pred_class = np.argmax(pred_np, axis=1)
+        class_names = [
+            'Atel', 'Card', 'Effu', 'Infi', 'Mass',
+            'Nodu', 'Pneu', 'Pnmx', 'Cons', 'Edem',
+            'Emph', 'Fibr', 'PlTh', 'Hern', 'NoFi'
+        ]
+        cm = sklearn_confusion_matrix(gt_class, pred_class, labels=range(len(class_names)))
+        plt.figure(figsize=(12, 10))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                    xticklabels=class_names, yticklabels=class_names)
+        plt.xlabel('Predicted', fontsize=13)
+        plt.ylabel('Actual', fontsize=13)
+        plt.title('Final Confusion Matrix', fontsize=15)
+        plt.tight_layout()
+        plt.savefig(os.path.join(results_dir, 'confusion_matrix_final.png'), dpi=150)
+        plt.close()
+        # Also save as CSV
+        np.savetxt(os.path.join(results_dir, 'confusion_matrix_final.csv'),
+                   cm, delimiter=',', header=','.join(class_names), fmt='%d')
+        print(f"Saved confusion matrix to {results_dir}/confusion_matrix_final.png")
+
+
 def main():
     RESUME = False
     resume_checkpoint_path = r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
@@ -277,17 +397,16 @@ def main():
     model = CoolSystem(config)
 
     checkpoint_callback = ModelCheckpoint(
-        monitor='f1',
         filename='placental-epoch{epoch:02d}-accuracy-{accuracy:.4f}-f1-{f1:.4f}',
         auto_insert_metric_name=False,   
         every_n_epochs=10,
-        save_top_k=1,
+        save_top_k=-1,
         mode = "max",
         save_last=True
     )
     lr_monitor_callback = LearningRateMonitor(logging_interval='step')
     trainer = pl.Trainer(
-        check_val_every_n_epoch=10,
+        check_val_every_n_epoch=999,
         max_epochs=config.training.n_epochs,
         accelerator='gpu',
         devices=1,
@@ -296,7 +415,7 @@ def main():
         num_sanity_val_steps=0,
         logger=logger,
         strategy="auto",
-        enable_progress_bar=True,
+        enable_progress_bar=False,
         log_every_n_steps=1,
         callbacks = [checkpoint_callback,lr_monitor_callback]
     ) 
@@ -304,9 +423,17 @@ def main():
     #train
     trainer.fit(model,ckpt_path=resume_checkpoint_path)
     
+    # Save all plots after training
+    save_plots(model)
+    
     #validate
     val_path=r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
-    trainer.validate(model,ckpt_path=val_path)
+    val_results = trainer.validate(model,ckpt_path=val_path)
+    
+    # Save final validation results
+    with open(os.path.join(results_dir, 'final_val_results.json'), 'w') as f:
+        json.dump(val_results, f, indent=2)
+    print(f"\nAll results saved to {results_dir}/")
     
 if __name__ == '__main__':
 	#your code
