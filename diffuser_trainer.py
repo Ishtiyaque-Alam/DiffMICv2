@@ -397,11 +397,9 @@ def main():
     model = CoolSystem(config)
 
     checkpoint_callback = ModelCheckpoint(
-        filename='placental-epoch{epoch:02d}-accuracy-{accuracy:.4f}-f1-{f1:.4f}',
-        auto_insert_metric_name=False,   
+        filename='checkpoint-epoch{epoch:02d}',
         every_n_epochs=10,
         save_top_k=-1,
-        mode = "max",
         save_last=True
     )
     lr_monitor_callback = LearningRateMonitor(logging_interval='step')
