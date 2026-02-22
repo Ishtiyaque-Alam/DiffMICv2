@@ -400,7 +400,8 @@ def main():
         filename='checkpoint-epoch{epoch:02d}',
         every_n_epochs=10,
         save_top_k=-1,
-        save_last=True
+        save_last=True,
+        save_on_train_epoch_end=True
     )
     lr_monitor_callback = LearningRateMonitor(logging_interval='step')
     trainer = pl.Trainer(
