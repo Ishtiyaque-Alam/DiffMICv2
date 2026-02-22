@@ -425,9 +425,8 @@ def main():
     # Save all plots after training
     save_plots(model)
     
-    #validate
-    val_path=r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
-    val_results = trainer.validate(model,ckpt_path=val_path)
+    #validate (model already has trained weights in memory)
+    val_results = trainer.validate(model)
     
     # Save final validation results
     with open(os.path.join(results_dir, 'final_val_results.json'), 'w') as f:
