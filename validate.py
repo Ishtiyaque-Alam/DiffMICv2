@@ -61,9 +61,11 @@ def main():
         params = yaml.safe_load(f)
     config = EasyDict(params)
 
-    # Load model from checkpoint
+    # Load model manually from checkpoint
     print(f"Loading checkpoint: {args.ckpt}")
-    model = CoolSystem.load_from_checkpoint(args.ckpt, hparams=config)
+    model = CoolSystem(config)
+    ckpt = torch.load(args.ckpt, map_location='cpu', weights_only=False)
+    model.load_state_dict(ckpt['state_dict'])
     model.eval()
     model.cuda()
     print("Model loaded successfully!")
