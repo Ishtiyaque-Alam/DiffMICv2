@@ -99,18 +99,25 @@ def main():
     with torch.no_grad():
         for batch_idx, (x_batch, y_batch) in enumerate(val_loader):
             x_batch = x_batch.cuda()
-            y_batch = y_batch.cuda()
+            y_batch = y_batch.float().cuda()
 
             # Run through aux_model
             y0_aux, y0_aux_global, y0_aux_local, patches, attns, attn_map = model.aux_model(x_batch)
 
-            # Run diffusion sampling
-            with torch.cuda.amp.autocast():
-                y_pred = model.DiffSampler(
-                    model.model, x_batch, y0_aux, y0_aux_global, y0_aux_local,
-                    patches, attns, attn_map
-                )
-            y_pred = y_pred.mean(2)  # average over diffusion samples
+            bz, nc, H, W = attn_map.size()
+            bz, np_val = attns.size()
+
+            # Build guided probability map (same as validation_step)
+            y0_cond = model.guided_prob_map(y0_aux_global, y0_aux_local, bz, nc, np_val)
+            yT = model.guided_prob_map(torch.rand_like(y0_aux_global), torch.rand_like(y0_aux_local), bz, nc, np_val)
+            attns_w = attns.unsqueeze(-1)
+            attns_w = (attns_w * attns_w.transpose(1, 2)).unsqueeze(1)
+
+            # Diffusion sampling
+            with torch.amp.autocast('cuda'):
+                y_pred = model.DiffSampler.sample_high_res(x_batch, yT, conditions=[y0_cond, patches, attns_w])
+            y_pred = y_pred.reshape(bz, nc, np_val * np_val)
+            y_pred = y_pred.mean(2)
 
             all_pred.append(y_pred.cpu())
             all_gt.append(y_batch.cpu())
