@@ -43,7 +43,7 @@ class HAM10000DataSet(Dataset):
                                          [0.229, 0.224, 0.225])
         if train:
             self.transform_center = transforms.Compose([
-                transforms.RandomResizedCrop(224),
+                transforms.RandomResizedCrop((224, 224)),
                 trans.RandomHorizontalFlip(),
                 trans.RandomRotation(20),
                 transforms.ToTensor(),
@@ -51,7 +51,7 @@ class HAM10000DataSet(Dataset):
             ])
         else:
             self.transform_center = transforms.Compose([
-                transforms.Resize(224),
+                transforms.Resize((224, 224)),
                 transforms.ToTensor(),
                 normalize
             ])
