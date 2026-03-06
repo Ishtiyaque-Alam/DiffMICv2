@@ -28,7 +28,7 @@ from sklearn.metrics import (
 import sys
 sys.path.insert(0, '/kaggle/working/DiffMICv2')
 from diffuser_trainer import CoolSystem
-from dataloader.loading import ChestXrayDataSet
+from dataloader.loading import HAM10000DataSet
 
 # ============================================================
 # Config
@@ -38,11 +38,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 VAL_SPLIT = 0.2   # use 20% of dataset for validation
 SEED = 42
 
-CLASS_NAMES = [
-    'Atel', 'Card', 'Effu', 'Infi', 'Mass',
-    'Nodu', 'Pneu', 'Pnmx', 'Cons', 'Edem',
-    'Emph', 'Fibr', 'PlTh', 'Hern', 'NoFi'
-]
+CLASS_NAMES = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 
 
 def main():
@@ -71,7 +67,7 @@ def main():
     print("Model loaded successfully!")
 
     # Build dataset and select random 20%
-    dataset = ChestXrayDataSet(
+    dataset = HAM10000DataSet(
         csv_file=config.data.testdata,
         data_dir=config.data.data_dir,
         train=False  # no augmentation

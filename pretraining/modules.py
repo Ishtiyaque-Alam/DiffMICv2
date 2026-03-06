@@ -5,6 +5,7 @@ import numpy as np
 
 import pretraining.tools as tools
 from torchvision.models.resnet import conv3x3, resnet18, resnet50
+from torchvision.models import densenet121
 
 
 class BasicBlockV2(nn.Module):
@@ -213,29 +214,20 @@ class ResNetV1(nn.Module):
         return x
 
 
-class DownsampleNetworkResNet18V1(nn.Module):
+class DownsampleNetworkDenseNet121(nn.Module):
     """
-    Downsampling using ResNet V1
-    First conv is 7*7, stride 2, padding 3, cut 1/2 resolution
+    Downsampling using DenseNet121 (pretrained)
+    Output: 1024 channels
     """
     def __init__(self):
-        super(DownsampleNetworkResNet18V1, self).__init__()
-        self.f = []
-        # backbone = resnet50(pretrained=True)
-        backbone = resnet18(pretrained=True)
-
-        
-        for name, module in backbone.named_children():
-            if name != 'fc' and name != 'avgpool':
-                self.f.append(module)
-        #print(self.f)
-        # encoder
-        self.f = nn.Sequential(*self.f)
+        super(DownsampleNetworkDenseNet121, self).__init__()
+        backbone = densenet121(pretrained=True)
+        self.f = backbone.features  # DenseNet121 features: 1024 channels
 
     def forward(self, x):
-        last_feature_map = self.f(x)
-        #print(last_feature_map.shape)
-        return last_feature_map
+        features = self.f(x)
+        features = F.relu(features, inplace=True)  # DenseNet needs final ReLU
+        return features
 
 
 class AbstractMILUnit:
@@ -271,7 +263,7 @@ class GlobalNetwork(AbstractMILUnit):
         super(GlobalNetwork, self).__init__(parameters, parent_module)
         # downsampling-branch
         if "use_v1_global" in parameters and parameters["use_v1_global"]:
-            self.downsampling_branch = DownsampleNetworkResNet18V1()
+            self.downsampling_branch = DownsampleNetworkDenseNet121()
         else:
             self.downsampling_branch = ResNetV2(input_channels=1, num_filters=16,
                      # first conv layer
@@ -385,7 +377,7 @@ class LocalNetwork(AbstractMILUnit):
         Function that add layers to the parent module that implements nn.Module
         :return:
         """
-        self.parent_module.dn_resnet = DownsampleNetworkResNet18V1()
+        self.parent_module.dn_resnet = DownsampleNetworkDenseNet121()
 
     def forward(self, x_crop):
         """
@@ -411,11 +403,11 @@ class AttentionModule(AbstractMILUnit):
         :return:
         """
         # The gated attention mechanism
-        self.parent_module.mil_attn_V = nn.Linear(512, 128, bias=False)
-        self.parent_module.mil_attn_U = nn.Linear(512, 128, bias=False)
+        self.parent_module.mil_attn_V = nn.Linear(1024, 128, bias=False)
+        self.parent_module.mil_attn_U = nn.Linear(1024, 128, bias=False)
         self.parent_module.mil_attn_w = nn.Linear(128, 1, bias=False)
         # classifier
-        self.parent_module.classifier_linear = nn.Linear(512, self.parameters["num_classes"], bias=False)
+        self.parent_module.classifier_linear = nn.Linear(1024, self.parameters["num_classes"], bias=False)
 
     def forward(self, h_crops):
         """

@@ -1,47 +1,40 @@
 data:
-    dataset: "CHEST"
+    dataset: "HAM10000"
     seed: 2000
     label_min_max: [0.001, 0.999]
-    num_classes: 15
+    num_classes: 7
     num_workers: 8
-    data_dir: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample/images'  # TODO: set path to directory containing the .png chest X-ray images
-    traindata: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample_labels.csv'  # TODO: replace with your train split CSV
-    testdata: '/kaggle/input/datasets/organizations/nih-chest-xrays/sample/sample/sample_labels.csv'  # TODO: replace with your test split CSV
+    data_dir: '/kaggle/input/datasets/surajghuwalewala/ham1000-segmentation-and-classification/images'
+    traindata: '/kaggle/input/datasets/surajghuwalewala/ham1000-segmentation-and-classification/GroundTruth.csv'
+    testdata: '/kaggle/input/datasets/surajghuwalewala/ham1000-segmentation-and-classification/GroundTruth.csv'
 
 model:
     type: "simple"
     data_dim: 150528
-    #data_dim: 442368
-#    data_dim: [3, 32, 32]
     n_input_channels: 3
     n_input_padding: 0
-    feature_dim: 6144
-    hidden_dim: 6144
+    feature_dim: 1024
+    hidden_dim: 1024
     cat_x: True
     cat_y_pred: True
     arch: resnet18
-#    arch: resnet50
-#    arch: resnet18
     var_type: fixedlarge
     ema_rate: 0.9999
     ema: True
     num_k: 6
 
 diffusion:
-    beta_schedule: linear  # cosine_anneal, cosine
+    beta_schedule: linear
     beta_start: 0.0001
     beta_end: 0.02
     timesteps: 1000
     test_timesteps: 100
     vis_step: 100
     num_figs: 10
-    include_guidance: True  # concat y_t with aux pred as eps_theta input
+    include_guidance: True
     apply_aux_cls: True
-    #trained_aux_cls_ckpt_path: "/data/classification/pretrained/cifar10_ckpt"
-#    trained_aux_cls_ckpt_name: "snapshot_supervised.ckpt"
-    #trained_aux_cls_ckpt_name: "snapshot_self_supervised.ckpt"
     aux_cls:
-        arch: resnet18_ckpt  # lenet5
+        arch: resnet18_ckpt
         pre_train: True
         joint_train: True
         n_pretrain_epochs: 10
@@ -49,7 +42,7 @@ diffusion:
     
 training:
     batch_size: 8
-    n_epochs: 95
+    n_epochs: 30
     warmup_epochs: 40
     add_t0_loss: False
     n_steps_req_grad: 100
@@ -60,7 +53,6 @@ training:
     snapshot_freq: 1000000000
     logging_freq: 1200
     validation_freq: 10
-    #lambda_ce: 0.01
     image_folder: 'training_image_samples'
 
 sampling:
@@ -107,4 +99,3 @@ aux_optim:
     amsgrad: True
     eps: 0.00000001
     grad_clip: 1.0
-

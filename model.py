@@ -131,8 +131,7 @@ class ConditionalModel(nn.Module):
         x_l = self.encoder_x_l(x_l)
         x_l = self.norm_l(x_l)
         
-        with torch.no_grad():
-            x = self.encoder_x(x)
+        x = self.encoder_x(x)
         x = self.norm(x)
 
 

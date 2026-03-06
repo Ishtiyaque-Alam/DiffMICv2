@@ -62,15 +62,8 @@ class CoolSystem(pl.LightningModule):
 
         self.model = ConditionalModel(self.params, guidance=self.params.diffusion.include_guidance)
         self.aux_model = AuxCls(self.params)
-        self.init_weight(ckpt_path='/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth')
+        self.init_weight(ckpt_path='/kaggle/working/DiffMICv2/pretraining/ckpt/ham1000_aux_model_final.pth')
         self.aux_model.eval()
-        # Freeze aux_model — no gradients needed
-        for param in self.aux_model.parameters():
-            param.requires_grad = False
-        # Freeze EfficientSAM encoder — it upscales to 1024x1024 internally,
-        # so storing its activation graph would consume ~12GB
-        for param in self.model.encoder_x.parameters():
-            param.requires_grad = False
 
         self.save_hyperparameters()
         

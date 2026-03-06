@@ -8,21 +8,17 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
-# The 14 disease classes in NIH Chest X-ray dataset
-CHEST_CLASSES = [
-    'Atelectasis', 'Cardiomegaly', 'Effusion', 'Infiltration', 'Mass',
-    'Nodule', 'Pneumonia', 'Pneumothorax', 'Consolidation', 'Edema',
-    'Emphysema', 'Fibrosis', 'Pleural_Thickening', 'Hernia'
-]
+# The 7 disease classes in HAM10000 dataset
+HAM_CLASSES = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
 
 
-class ChestXrayDataSet(Dataset):
+class HAM10000DataSet(Dataset):
     def __init__(self, csv_file, data_dir, train=True):
         """
         Args:
-            csv_file: path to CSV file with columns:
-                      Image Index, Finding Labels, ...
-            data_dir: path to directory containing the images.
+            csv_file: path to GroundTruth.csv with columns:
+                      image, MEL, NV, BCC, AKIEC, BKL, DF, VASC
+            data_dir: path to directory containing the .jpg images.
             train: if True, apply data augmentation.
         """
         self.data_dir = data_dir
@@ -31,23 +27,13 @@ class ChestXrayDataSet(Dataset):
 
         with open(csv_file, "r") as f:
             reader = csv.reader(f)
-            next(reader)  # skip header
+            header = next(reader)  # skip header
             for row in reader:
-                image_name = row[0].strip()
-                finding_labels = row[1].strip()
+                image_id = row[0].strip()
+                # Build 7-class one-hot vector from CSV columns
+                label = [int(row[i]) for i in range(1, 8)]
 
-                # Build 14-class one-hot vector
-                label = [0] * len(CHEST_CLASSES)
-                if finding_labels != 'No Finding':
-                    for disease in finding_labels.split('|'):
-                        disease = disease.strip()
-                        if disease in CHEST_CLASSES:
-                            label[CHEST_CLASSES.index(disease)] = 1
-
-                # 15th element: 1 if No Finding, 0 otherwise
-                label.append(1 if (np.array(label) == 0).all() else 0)
-
-                image_names.append(os.path.join(data_dir, image_name))
+                image_names.append(os.path.join(data_dir, image_id + '.jpg'))
                 labels.append(label)
 
         self.image_names = image_names
@@ -79,4 +65,3 @@ class ChestXrayDataSet(Dataset):
 
     def __len__(self):
         return len(self.image_names)
-

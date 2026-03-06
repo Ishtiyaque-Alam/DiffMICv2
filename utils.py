@@ -101,6 +101,7 @@ def adjust_learning_rate(optimizer, epoch, config):
 def get_dataset(config):
     data_object = None
     if config.data.dataset == "CHEST":
+        from dataloader.loading import ChestXrayDataSet
         train_dataset = ChestXrayDataSet(
             csv_file=config.data.traindata,
             data_dir=config.data.data_dir,
@@ -111,9 +112,21 @@ def get_dataset(config):
             data_dir=config.data.data_dir,
             train=False
         )
+    elif config.data.dataset == "HAM10000":
+        from dataloader.loading import HAM10000DataSet
+        train_dataset = HAM10000DataSet(
+            csv_file=config.data.traindata,
+            data_dir=config.data.data_dir,
+            train=True
+        )
+        test_dataset = HAM10000DataSet(
+            csv_file=config.data.testdata,
+            data_dir=config.data.data_dir,
+            train=False
+        )
     else:
         raise NotImplementedError(
-            f"Dataset {config.data.dataset} not supported. Use CHEST.")
+            f"Dataset {config.data.dataset} not supported. Use CHEST or HAM10000.")
     return data_object, train_dataset, test_dataset
 
 

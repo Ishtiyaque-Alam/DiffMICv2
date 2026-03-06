@@ -77,7 +77,7 @@ def pretrain_dcg(config_path, num_epochs=20, batch_size=32, lr=1e-4, save_path=N
     if save_path is None:
         save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ckpt')
         os.makedirs(save_dir, exist_ok=True)
-        save_path = os.path.join(save_dir, 'chest_aux_model.pth')
+        save_path = os.path.join(save_dir, 'ham1000_aux_model.pth')
 
     best_loss = float('inf')
 
