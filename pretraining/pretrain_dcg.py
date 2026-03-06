@@ -19,7 +19,7 @@ from easydict import EasyDict
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pretraining.dcg import DCG
-from dataloader.loading import ChestXrayDataSet
+from dataloader.loading import HAM10000DataSet
 
 
 def pretrain_dcg(config_path, num_epochs=20, batch_size=32, lr=1e-4, save_path=None):
@@ -36,12 +36,12 @@ def pretrain_dcg(config_path, num_epochs=20, batch_size=32, lr=1e-4, save_path=N
     print(f"Using device: {device}")
 
     # Load datasets
-    train_dataset = ChestXrayDataSet(
+    train_dataset = HAM10000DataSet(
         csv_file=config.data.traindata,
         data_dir=config.data.data_dir,
         train=True
     )
-    test_dataset = ChestXrayDataSet(
+    test_dataset = HAM10000DataSet(
         csv_file=config.data.testdata,
         data_dir=config.data.data_dir,
         train=False
