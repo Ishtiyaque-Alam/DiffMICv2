@@ -31,7 +31,7 @@ class HAM10000DataSet(Dataset):
             for row in reader:
                 image_id = row[0].strip()
                 # Build 7-class one-hot vector from CSV columns
-                label = [int(row[i]) for i in range(1, 8)]
+                label = [int(float(row[i])) for i in range(1, 8)]
 
                 image_names.append(os.path.join(data_dir, image_id + '.jpg'))
                 labels.append(label)
