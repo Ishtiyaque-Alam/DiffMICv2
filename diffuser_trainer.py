@@ -62,7 +62,7 @@ class CoolSystem(pl.LightningModule):
 
         self.model = ConditionalModel(self.params, guidance=self.params.diffusion.include_guidance)
         self.aux_model = AuxCls(self.params)
-        self.init_weight(ckpt_path='/kaggle/working/DiffMICv2/pretraining/ckpt/ham1000_aux_model_final.pth')
+        self.init_weight(ckpt_path='/kaggle/input/models/sajidalam9/ham1000-dcg-trained/pytorch/default/1/ham1000_aux_model_final.pth')
         self.aux_model.eval()
 
         self.save_hyperparameters()
