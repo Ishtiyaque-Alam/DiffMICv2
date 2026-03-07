@@ -367,7 +367,7 @@ def save_plots(model):
 
 def main():
     RESUME = False
-    resume_checkpoint_path = r'/kaggle/input/datasets/sajidalam9/chestxray-dcg/chest_aux_model_final.pth'
+    resume_checkpoint_path = r'/kaggle/input/models/sajidalam9/ham1000-dcg-trained/pytorch/default/1/ham1000_aux_model_final.pth'
     if RESUME == False:
         resume_checkpoint_path =None
 
@@ -408,6 +408,7 @@ def main():
         logger=logger,
         strategy="auto",
         enable_progress_bar=False,
+        accumulate_grad_batches=4,
         log_every_n_steps=1,
         callbacks = [checkpoint_callback,lr_monitor_callback]
     ) 
