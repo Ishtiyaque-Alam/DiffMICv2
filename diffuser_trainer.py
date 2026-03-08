@@ -64,6 +64,9 @@ class CoolSystem(pl.LightningModule):
         self.aux_model = AuxCls(self.params)
         self.init_weight(ckpt_path='/kaggle/input/models/sajidalam9/ham1000-dcg-trained/pytorch/default/1/ham1000_aux_model_final.pth')
         self.aux_model.eval()
+        # Freeze EfficientSAM encoder — it upscales to 1024x1024 internally
+        for param in self.model.encoder_x.parameters():
+            param.requires_grad = False
 
         self.save_hyperparameters()
         
