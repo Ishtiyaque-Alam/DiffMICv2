@@ -259,7 +259,7 @@ class CoolSystem(pl.LightningModule):
             batch_size=self.params.training.batch_size,
             shuffle=True,
             num_workers=self.params.data.num_workers,
-            #sampler=sampler
+            drop_last=True,
         )
         return train_loader
     
